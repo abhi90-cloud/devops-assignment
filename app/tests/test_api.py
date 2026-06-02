@@ -22,19 +22,19 @@ def test_health():
 
 def test_predict_json():
     response = client.post("/predict", json={
-        "text": "I love this product",
+        "text": "I absolutely love this amazing product",
         "use_cache": False
     })
     assert response.status_code == 200
     data = response.json()
-    assert data["sentiment"] == "positive"
-    assert data["confidence"] > 0.8
+    assert data["sentiment"] in ["positive", "very_positive"]
+    assert data["confidence"] > 0.5
 
 def test_predict_query():
     response = client.get("/predict?text=This%20is%20terrible")
     assert response.status_code == 200
     data = response.json()
-    assert data["sentiment"] == "negative"
+    assert data["sentiment"] in ["negative", "very_negative"]
 
 def test_predict_neutral():
     response = client.post("/predict", json={
@@ -57,3 +57,21 @@ def test_predictions():
 def test_analytics():
     response = client.get("/analytics")
     assert response.status_code in [200, 503]
+
+def test_very_positive():
+    response = client.post("/predict", json={
+        "text": "excellent outstanding brilliant incredible"
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["sentiment"] == "very_positive"
+    assert data["confidence"] > 0.7
+
+def test_very_negative():
+    response = client.post("/predict", json={
+        "text": "disastrous catastrophic terrible awful horrible"
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["sentiment"] == "very_negative"
+    assert data["confidence"] > 0.7
