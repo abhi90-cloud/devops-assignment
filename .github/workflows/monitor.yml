@@ -1,0 +1,20 @@
+name: 🏥 Health Monitor
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+
+jobs:
+  monitor:
+    name: Health Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Production
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://ai-backend.astrodirectory.in/health)
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ Healthy: $STATUS"
+          else
+            echo "❌ DOWN: $STATUS"
+            exit 1
+          fi

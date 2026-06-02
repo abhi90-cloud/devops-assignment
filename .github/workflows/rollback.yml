@@ -1,0 +1,29 @@
+name: ⏪ Emergency Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Rollback to build number'
+        required: true
+
+jobs:
+  rollback:
+    name: Rollback
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rollback
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /opt/devops-app/devops-assignment
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/devops-fastapi:${{ inputs.version }}
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/devops-nginx:${{ inputs.version }}
+            docker tag ${{ secrets.DOCKERHUB_USERNAME }}/devops-fastapi:${{ inputs.version }} ${{ secrets.DOCKERHUB_USERNAME }}/devops-fastapi:latest
+            docker tag ${{ secrets.DOCKERHUB_USERNAME }}/devops-nginx:${{ inputs.version }} ${{ secrets.DOCKERHUB_USERNAME }}/devops-nginx:latest
+            docker compose down
+            docker compose up -d
+            curl -f http://localhost/health && echo "✅ Rollback OK" || echo "❌ Failed"

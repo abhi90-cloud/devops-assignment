@@ -1,0 +1,45 @@
+name: 🔍 CI - Continuous Integration
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  code-quality:
+    name: Code Quality & Security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: |
+          pip install flake8 bandit
+          cd app
+          flake8 . --count --max-line-length=127 --statistics
+          bandit -r . -ll -q
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: |
+          cd app
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+          python -m pytest tests/ -v --cov=. --tb=short
+
+  docker-check:
+    name: Docker Build Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          docker build -t test-fastapi ./app
+          docker build -t test-nginx ./nginx

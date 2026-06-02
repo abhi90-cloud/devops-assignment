@@ -1,50 +1,33 @@
-name: Build Push Deploy
+name: 🚀 Deploy to Production
 
 on:
-  push:
-    branches: [ main ]
+  workflow_run:
+    workflows: ["📦 Build & Push Images"]
+    types: [completed]
+  workflow_dispatch:
+
+env:
+  APP_URL: https://ai-backend.astrodirectory.in
 
 jobs:
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - run: |
-          cd app
-          pip install -r requirements.txt pytest
-          python -m pytest tests/ -v
-
-  build-push:
-    name: Build and Push
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - uses: docker/build-push-action@v5
-        with:
-          context: ./app
-          push: true
-          tags: ab90909090hi/devops-fastapi:latest
-      - uses: docker/build-push-action@v5
-        with:
-          context: ./nginx
-          push: true
-          tags: ab90909090hi/devops-nginx:latest
-
   deploy:
-    name: Deploy to EC2
-    needs: build-push
+    name: Deploy
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
+    environment: production
     steps:
-      - uses: appleboy/ssh-action@v1.0.0
+      - name: Backup Database
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /opt/devops-app
+            ./scripts/backup.sh 2>/dev/null || true
+      
+      - name: Deploy
+        uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
@@ -52,9 +35,16 @@ jobs:
           script: |
             cd /opt/devops-app/devops-assignment
             git pull origin main
-            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ab90909090hi --password-stdin
-            docker compose down
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin 2>/dev/null
             docker compose pull
-            docker compose up -d
+            docker compose up -d --remove-orphans
             sleep 15
-            curl -f http://localhost/health && echo "OK" || echo "FAIL"
+            curl -f http://localhost/health && echo "✅ OK" || exit 1
+      
+      - name: Smoke Tests
+        run: |
+          sleep 10
+          curl -fs ${{ env.APP_URL }}/health && echo "✅ Health OK"
+          curl -fs -X POST ${{ env.APP_URL }}/predict \
+            -H "Content-Type: application/json" \
+            -d '{"text":"I love this!"}' && echo "✅ API OK"
