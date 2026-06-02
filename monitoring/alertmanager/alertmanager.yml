@@ -1,0 +1,32 @@
+global:
+  slack_api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+
+route:
+  receiver: 'slack-notifications'
+  group_by: ['alertname', 'severity']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  - name: 'slack-notifications'
+    slack_configs:
+      - channel: '#alerts'
+        title: '{{ .GroupLabels.alertname }}'
+        text: '{{ .CommonAnnotations.description }}'
+        send_resolved: true
+
+  - name: 'email-notifications'
+    email_configs:
+      - to: 'admin@astrodirectory.in'
+        from: 'alerts@astrodirectory.in'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: 'admin@astrodirectory.in'
+        auth_password: 'your-password'
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname']
