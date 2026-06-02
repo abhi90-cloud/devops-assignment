@@ -1,9 +1,12 @@
-name: CI/CD Pipeline
+name: Build Push Deploy
+
 on:
   push:
     branches: [ main ]
+
 jobs:
   test:
+    name: Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -12,16 +15,42 @@ jobs:
           python-version: '3.11'
       - run: |
           cd app
-          pip install -r requirements.txt
-          pip install pytest
+          pip install -r requirements.txt pytest
           python -m pytest tests/ -v
-  deploy:
+
+  build-push:
+    name: Build and Push
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy to EC2
+      
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Build and Push FastAPI
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app
+          push: true
+          tags: ab90909090hi/devops-fastapi:latest
+      
+      - name: Build and Push NGINX
+        uses: docker/build-push-action@v5
+        with:
+          context: ./nginx
+          push: true
+          tags: ab90909090hi/devops-nginx:latest
+
+  deploy:
+    name: Deploy to EC2
+    needs: build-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -30,7 +59,9 @@ jobs:
           script: |
             cd /opt/devops-app/devops-assignment
             git pull origin main
-            docker compose down
-            docker compose up -d --build
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ab90909090hi --password-stdin
+            docker compose pull
+            docker compose up -d
             sleep 15
-            curl -f http://localhost/health && echo "OK" || exit 1
+            curl -f http://localhost/health && echo "OK" || echo "FAIL"
+            docker image prune -af

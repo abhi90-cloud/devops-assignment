@@ -1,20 +1,19 @@
 services:
   fastapi:
-    build: ./app
+    image: ab90909090hi/devops-fastapi:latest
     container_name: fastapi_app
     restart: always
+    pull_policy: always
     environment:
       - POSTGRES_HOST=postgres
       - POSTGRES_PORT=5432
       - POSTGRES_USER=devopsadmin
-      - POSTGRES_PASSWORD=DevOpsProd2024!
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-DevOpsProd2024!}
       - POSTGRES_DB=devopsdb
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - REDIS_PASSWORD=RedisProd2024!
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-RedisProd2024!}
       - ENVIRONMENT=production
-      - LOG_LEVEL=INFO
-      - DOMAIN=ai-backend.astrodirectory.in
     volumes:
       - app_logs:/app/logs
     networks:
@@ -29,20 +28,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 2G
-        reservations:
-          cpus: '0.5'
-          memory: 512M
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   postgres:
     image: postgres:16-alpine
@@ -57,26 +42,16 @@ services:
     networks:
       - app_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U devopsadmin -d devopsdb"]
+      test: ["CMD-SHELL", "pg_isready -U devopsadmin"]
       interval: 10s
       timeout: 5s
       retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 2G
 
   redis:
     image: redis:7-alpine
     container_name: redis_cache
     restart: always
-    command: >
-      redis-server
-      --appendonly yes
-      --requirepass RedisProd2024!
-      --maxmemory 512mb
-      --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --requirepass RedisProd2024! --maxmemory 512mb --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
     networks:
@@ -88,9 +63,10 @@ services:
       retries: 5
 
   nginx:
-    build: ./nginx
+    image: ab90909090hi/devops-nginx:latest
     container_name: nginx_proxy
     restart: always
+    pull_policy: always
     ports:
       - "80:80"
       - "443:443"
@@ -103,11 +79,6 @@ services:
     depends_on:
       fastapi:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "nginx", "-t"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
 volumes:
   postgres_data:
