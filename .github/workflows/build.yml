@@ -1,9 +1,8 @@
-name: 📦 Build & Push Images
+name: 📦 Build & Push
 
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
 
 env:
   FASTAPI_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/devops-fastapi
@@ -11,7 +10,7 @@ env:
 
 jobs:
   build:
-    name: Build and Push to DockerHub
+    name: Build and Push
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,3 +43,11 @@ jobs:
             ${{ env.NGINX_IMAGE }}:${{ github.run_number }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      
+      - name: Summary
+        run: |
+          echo "✅ Images pushed:"
+          echo "  ${{ env.FASTAPI_IMAGE }}:latest"
+          echo "  ${{ env.FASTAPI_IMAGE }}:${{ github.run_number }}"
+          echo "  ${{ env.NGINX_IMAGE }}:latest"
+          echo "  ${{ env.NGINX_IMAGE }}:${{ github.run_number }}"
