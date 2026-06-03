@@ -6,3 +6,4 @@ nginx/ssl/*.pem
 *.log
 backups/
 .DS_Store
+nginx/ssl/*.pem
