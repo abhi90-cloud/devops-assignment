@@ -19,13 +19,6 @@ Production-grade AI Sentiment Analysis platform demonstrating modern DevOps prac
 | ReDoc Documentation  | https://ai-backend.astrodirectory.in/redoc        |
 | GitHub Repository    | https://github.com/abhi90-cloud/devops-assignment |
 
-**Grafana Credentials**
-
-```text
-Username: admin
-Password: admin
-```
-
 ---
 
 # ⚡ Quick Test
