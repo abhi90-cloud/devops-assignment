@@ -1,4 +1,4 @@
-name: 🔍 CI
+name:  CI
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
           cd app
           # Only check for critical errors, ignore style
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          echo "✅ Critical checks passed"
+          echo " Critical checks passed"
 
   security:
     name: Security Scan
@@ -34,7 +34,7 @@ jobs:
           pip install bandit
           cd app
           bandit -r . -ll -q || true
-          echo "✅ Security scan complete"
+          echo " Security scan complete"
 
   test:
     name: Tests
@@ -49,4 +49,4 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-cov
           python -m pytest tests/ -v --tb=short
-          echo "✅ Tests complete"
+          echo " Tests complete"
