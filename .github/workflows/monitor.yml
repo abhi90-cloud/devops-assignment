@@ -1,4 +1,4 @@
-name: 🏥 Health Monitor
+name:  Health Monitor
 
 on:
   schedule:
@@ -13,8 +13,8 @@ jobs:
         run: |
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://ai-backend.astrodirectory.in/health)
           if [ "$STATUS" = "200" ]; then
-            echo "✅ Healthy: $STATUS"
+            echo " Healthy: $STATUS"
           else
-            echo "❌ DOWN: $STATUS"
+            echo " DOWN: $STATUS"
             exit 1
           fi
