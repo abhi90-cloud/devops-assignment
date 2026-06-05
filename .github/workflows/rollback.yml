@@ -1,4 +1,4 @@
-name: ⏪ Emergency Rollback
+name:  Emergency Rollback
 
 on:
   workflow_dispatch:
@@ -26,4 +26,4 @@ jobs:
             docker tag ${{ secrets.DOCKERHUB_USERNAME }}/devops-nginx:${{ inputs.version }} ${{ secrets.DOCKERHUB_USERNAME }}/devops-nginx:latest
             docker compose down
             docker compose up -d
-            curl -f http://localhost/health && echo "✅ Rollback OK" || echo "❌ Failed"
+            curl -f http://localhost/health && echo " Rollback OK" || echo " Failed"

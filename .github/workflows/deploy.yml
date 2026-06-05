@@ -1,8 +1,8 @@
-name: 🚀 Deploy
+name:  Deploy
 
 on:
   workflow_run:
-    workflows: ["📦 Build & Push"]
+    workflows: [" Build & Push"]
     types: [completed]
   workflow_dispatch:
 
@@ -31,12 +31,12 @@ jobs:
             docker compose up -d --remove-orphans
             
             sleep 15
-            curl -f http://localhost/health && echo "✅ Deploy OK" || { echo "❌ Failed"; exit 1; }
+            curl -f http://localhost/health && echo " Deploy OK" || { echo " Failed"; exit 1; }
       
       - name: Verify
         run: |
           sleep 10
-          curl -fs https://ai-backend.astrodirectory.in/health && echo "✅ Production healthy"
+          curl -fs https://ai-backend.astrodirectory.in/health && echo " Production healthy"
           curl -fs -X POST https://ai-backend.astrodirectory.in/predict \
             -H "Content-Type: application/json" \
-            -d '{"text":"I love this!"}' > /dev/null && echo "✅ API working"
+            -d '{"text":"I love this!"}' > /dev/null && echo " API working"

@@ -1,4 +1,4 @@
-name: 📦 Build & Push
+name:  Build & Push
 
 on:
   push:
@@ -46,7 +46,7 @@ jobs:
       
       - name: Summary
         run: |
-          echo "✅ Images pushed:"
+          echo " Images pushed:"
           echo "  ${{ env.FASTAPI_IMAGE }}:latest"
           echo "  ${{ env.FASTAPI_IMAGE }}:${{ github.run_number }}"
           echo "  ${{ env.NGINX_IMAGE }}:latest"
